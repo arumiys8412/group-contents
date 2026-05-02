@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>그룹 콘텐츠창 — 반응형 프로토타입</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f5f2;
+  --bg-tertiary: #efeae3;
+  --bg-info: #e8f0fa;
+  --bg-warning: #fdf3e0;
+  --bg-success: #e6f4ea;
+  --bg-danger: #fce8e6;
+  --bg-purple: #f0e8f7;
+  --bg-cyan: #ddf0f0;
+  --bg-video: #fce0e0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-tertiary: #8a8a8a;
+  --text-info: #1e6cb8;
+  --text-warning: #b87a1e;
+  --text-success: #1e7a4a;
+  --text-danger: #b8342a;
+  --text-purple: #7a4ab8;
+  --text-cyan: #1e7a7a;
+  --border-primary: #d4d0c8;
+  --border-secondary: #b5b0a6;
+  --border-tertiary: #e0ddd6;
+  --border-info: #b8d0e8;
+  --border-warning: #e8c890;
+  --border-success: #b8d8c0;
+  --border-danger: #e8b0a8;
+  --border-purple: #d4c0e0;
+  --border-cyan: #b0d0d0;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.container { max-width: 1400px; margin: 0 auto; }
+header { margin-bottom: 24px; }
+header h1 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+header .subtitle { margin: 0; font-size: 13px; color: var(--text-tertiary); }
+
+.policy-summary {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 12px;
+}
+.policy-summary .label {
+  display: inline-block;
+  background: var(--bg-info);
+  color: var(--text-info);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 11px;
+  margin-right: 8px;
+}
+.policy-summary p { margin: 4px 0; color: var(--text-secondary); }
+.policy-summary strong { color: var(--text-primary); }
+
+.section { margin-bottom: 16px; }
+.section-label { font-size: 12px; color: var(--text-tertiary); margin: 0 0 8px; }
+
+.scenario-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.scenario-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: left;
+  flex: 1;
+  min-width: 140px;
+  font-family: inherit;
+}
+.scenario-btn:hover { border-color: var(--border-secondary); }
+.scenario-btn.active {
+  background: var(--bg-info);
+  border-color: var(--border-info);
+  color: var(--text-info);
+}
+.scenario-btn .name { font-weight: 500; display: block; margin-bottom: 2px; }
+.scenario-btn .desc { font-size: 11px; color: var(--text-tertiary); }
+.scenario-btn.active .desc { color: var(--text-info); opacity: 0.85; }
+.unsupported-badge {
+  display: inline-block;
+  background: var(--bg-danger);
+  color: var(--text-danger);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+
+.state-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.state-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.state-btn:hover { border-color: var(--border-secondary); }
+.state-btn.active {
+  background: var(--text-info);
+  color: var(--bg-primary);
+  border-color: var(--text-info);
+}
+
+.viewport-control {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+.viewport-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.viewport-row label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.viewport-row input[type=range] { flex: 1; min-width: 240px; }
+.viewport-info {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.bp-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.bp-md { background: var(--bg-info); color: var(--text-info); }
+.bp-sm { background: var(--bg-warning); color: var(--text-warning); }
+.preset-btns { display: flex; gap: 4px; }
+.preset-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+}
+.preset-btn:hover { border-color: var(--border-secondary); }
+.preset-btn.active {
+  background: var(--text-info);
+  color: var(--bg-primary);
+  border-color: var(--text-info);
+}
+.bp-explainer {
+  background: var(--bg-info);
+  color: var(--text-info);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
+.canvas-area {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.responsive-screen {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  width: var(--screen-w, 800px);
+  aspect-ratio: 16/9;
+  position: relative;
+  overflow: hidden;
+  transition: width .25s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.responsive-screen.is-mobile {
+  aspect-ratio: 9/16;
+  max-height: 600px;
+  border-radius: var(--radius-lg);
+}
+
+.unsupported-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-danger);
+  color: var(--text-danger);
+  border: 1px solid var(--border-danger);
+  border-radius: var(--radius-md);
+  padding: 16px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  z-index: 100;
+}
+
+.slot {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px;
+  text-align: center;
+  transition: all .35s ease;
+}
+.slot-a { background: var(--bg-info); color: var(--text-info); border-color: var(--border-info); }
+.slot-d { background: var(--bg-danger); color: var(--text-danger); border-color: var(--border-danger); }
+.slot-list { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border-tertiary); font-size: 11px; }
+
+.frame-md {
+  display: grid;
+  grid-template-columns: var(--c-w, 0) 1fr 140px;
+  gap: 8px;
+  height: 100%;
+  transition: grid-template-columns .25s ease;
+}
+.pc-content-area {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+.pc-content-area.has-minibar {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+.pc-main-wrap { position: relative; min-height: 0; height: 100%; }
+
+.right-panel { position: relative; height: 100%; }
+.right-list { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+.c-fixed-content {
+  height: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.c-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+}
+.c-item {
+  flex: 1;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 0;
+}
+.c-item-discussion { background: var(--bg-purple); color: var(--text-purple); border-color: var(--border-purple); }
+.c-item-confirm { background: var(--bg-success); color: var(--text-success); border-color: var(--border-success); }
+.c-item-test { background: var(--bg-warning); color: var(--text-warning); border-color: var(--border-warning); cursor: pointer; }
+.c-item-test .btn-mini {
+  background: var(--text-warning);
+  color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.c-item-audio { background: var(--bg-cyan); color: var(--text-cyan); border-color: var(--border-cyan); }
+.c-item-audio .audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  margin-top: 2px;
+}
+.c-item-video { background: var(--bg-video); color: var(--text-danger); border-color: var(--border-danger); }
+.c-item-icon { font-size: 18px; margin-bottom: 2px; }
+.c-handle {
+  position: absolute;
+  top: 50%;
+  right: -3px;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 28px;
+  background: var(--border-secondary);
+  border-radius: 2px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.minibar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.minibar-test { background: var(--bg-warning); border-color: var(--border-warning); color: var(--text-warning); }
+.minibar-audio { background: var(--bg-cyan); border-color: var(--border-cyan); color: var(--text-cyan); }
+.minibar .left { display: flex; align-items: center; gap: 6px; }
+.minibar .right { display: flex; align-items: center; gap: 6px; }
+.minibar-test .btn-mini {
+  background: var(--text-warning);
+  color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.minibar-audio .audio-time { font-size: 11px; }
+
+.test-active-fullarea {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: var(--bg-warning);
+  border: 1px solid var(--border-warning);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  z-index: 7;
+  overflow: hidden;
+}
+.test-active-header {
+  background: var(--text-warning);
+  color: var(--bg-primary);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.test-active-body {
+  flex: 1;
+  background: var(--bg-primary);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+.test-question {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.test-options { display: flex; flex-direction: column; gap: 6px; }
+.test-option {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.test-option:hover { border-color: var(--border-secondary); }
+.test-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+}
+.btn-submit {
+  background: var(--text-warning);
+  color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 13px;
+  border: 1px solid var(--border-tertiary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 응시 중 오디오 미니바는 응시 전과 동일 위치 유지 (.minibar 그대로 사용) */
+
+.pip-overlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  aspect-ratio: 16/9;
+  width: 30%;
+  min-width: 110px;
+  z-index: 9;
+}
+
+.frame-sm {
+  display: grid;
+  grid-template-rows: var(--minibar-h, 0) var(--main-h, 1fr) var(--c-h-m, 0) 36px;
+  gap: 4px;
+  height: 100%;
+  position: relative;
+}
+.frame-sm.has-c { --main-h: 1.4fr; --c-h-m: 1fr; }
+.frame-sm.has-minibar { --minibar-h: 32px; }
+.mobile-pip-sm {
+  position: absolute;
+  bottom: 44px;
+  right: 6px;
+  aspect-ratio: 16/9;
+  width: 36%;
+  z-index: 9;
+}
+.mobile-c-stack {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  overflow: hidden;
+}
+.mobile-c-item {
+  flex: 1;
+  border-radius: 3px;
+  padding: 5px;
+  font-weight: 500;
+  border: 1px solid;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 0;
+}
+.mobile-minibar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  font-size: 9px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.mobile-minibar.minibar-test { background: var(--bg-warning); border-color: var(--border-warning); color: var(--text-warning); }
+.mobile-minibar.minibar-audio { background: var(--bg-cyan); border-color: var(--border-cyan); color: var(--text-cyan); }
+.mobile-minibar .btn-mini {
+  background: var(--text-warning);
+  color: var(--bg-primary);
+  border-radius: 2px;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mobile-test-active-full {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-warning);
+  border: 1px solid var(--border-warning);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  z-index: 7;
+  overflow: hidden;
+}
+.mobile-test-active-full .test-active-header { font-size: 10px; padding: 6px 10px; }
+.mobile-test-active-full .test-active-body { padding: 10px; gap: 8px; }
+.mobile-test-active-full .test-question { font-size: 11px; }
+.mobile-test-active-full .test-option { padding: 6px 8px; font-size: 10px; }
+.mobile-test-active-full .btn-submit, .mobile-test-active-full .btn-cancel { font-size: 10px; padding: 6px 10px; }
+.mobile-audio-during-test {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 4px;
+  z-index: 8;
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-tertiary); }
+.legend-swatch { width: 12px; height: 12px; border-radius: 2px; border: 1px solid; }
+
+.scenario-detail {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+.scenario-detail .title {
+  font-weight: 500;
+  margin: 0 0 12px;
+  font-size: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-tertiary);
+}
+.scenario-detail .info-block { margin: 0 0 10px; line-height: 1.6; }
+.scenario-detail .info-block:last-child { margin-bottom: 0; }
+.scenario-detail .info-label {
+  display: inline-block;
+  min-width: 96px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 12px;
+  vertical-align: top;
+}
+.scenario-detail .info-content { color: var(--text-secondary); }
+
+footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-tertiary);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<h1>그룹 콘텐츠창 — 반응형 프로토타입</h1>
+<p class="subtitle">시나리오별 학습 흐름·슬롯 결정 근거 화면 하단 표시. 시나리오 클릭으로 시각화 + 정책 본질 짐작 가능.</p>
+</header>
+
+<div class="policy-summary">
+<p><span class="label">슬롯 결정 정책</span></p>
+<p>• <strong>원칙 1</strong>: 좌측 사이드 패널은 비어 있으면 안 됨 (콘텐츠창 시각 균형)</p>
+<p>• <strong>원칙 2</strong>: 시각 점유 크기에 따라 슬롯 분리 — 큰 콘텐츠(이미지·아티클·동영상 부가·토론)=좌측 사이드 패널 / 작은 콘텐츠(오디오·응시형)=상황 따라 좌측 또는 미니바</p>
+<p>• <strong>원칙 3</strong>: 미니바는 1개만 (분할 불가). 위치 = <strong>메인 영역 위</strong> (PC·모바일 통합). 시각 점유 큰+작은 혼합 또는 작은 2개일 때 활성. 우선순위: 오디오 > 응시형</p>
+</div>
+
+<div class="section">
+<p class="section-label">시나리오</p>
+<div class="scenario-buttons" id="scenario-buttons"></div>
+</div>
+
+<div class="section">
+<p class="section-label">상태</p>
+<div class="state-buttons" id="state-buttons"></div>
+</div>
+
+<div class="viewport-control">
+<div class="viewport-row">
+<label>화면 모드:</label>
+<div class="preset-btns">
+<button class="preset-btn active" data-mode="desktop">데스크탑</button>
+<button class="preset-btn" data-mode="mobile">모바일</button>
+</div>
+<span id="bp-indicator" style="margin-left: auto;"></span>
+</div>
+<p class="bp-explainer" id="bp-explainer"></p>
+</div>
+
+<div class="canvas-area">
+<div class="responsive-screen" id="responsive-screen"></div>
+</div>
+
+<div class="legend">
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-info); border-color: var(--border-info);"></div>메인</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-purple); border-color: var(--border-purple);"></div>토론 (큰)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-success); border-color: var(--border-success);"></div>확인형 (큰)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-video); border-color: var(--border-danger);"></div>동영상 부가 (큰)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-warning); border-color: var(--border-warning);"></div>응시형 (작은)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-cyan); border-color: var(--border-cyan);"></div>오디오 (작은)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-danger); border-color: var(--border-danger);"></div>PIP (응시 시)</div>
+<div class="legend-item"><div class="legend-swatch" style="background: var(--bg-tertiary); border-color: var(--border-tertiary);"></div>학습목록</div>
+</div>
+
+<div class="scenario-detail" id="scenario-detail"></div>
+
+<footer>
+연수원 3.0 콘텐츠 그룹 정책
+</footer>
+
+</div>
+
+<script>
+const BP_SM = 768;
+
+// 시각 점유 크기 분류
+const VISUAL_SIZE = {
+  test: 'small',
+  audio: 'small',
+  confirm: 'large',
+  discussion: 'large',
+  video: 'large'
+};
+
+// 슬롯 결정 함수 (슬롯 결정 정책 구현)
+function decideSlots(extras) {
+  // extras: 부가 콘텐츠 배열
+  // 반환: { cItems, minibarItem }
+  
+  if (extras.length === 0) {
+    return { cItems: [], minibarItem: null };
+  }
+  
+  // 부가 1개: 무조건 좌측 사이드 패널
+  if (extras.length === 1) {
+    return { cItems: extras, minibarItem: null };
+  }
+  
+  // 부가 2개 이상: 시각 점유로 분리
+  const largeItems = extras.filter(item => VISUAL_SIZE[item.type] === 'large');
+  const smallItems = extras.filter(item => VISUAL_SIZE[item.type] === 'small');
+  
+  // 미니바 우선순위 결정 함수: 오디오 > 응시형
+  const pickMinibar = (items) => {
+    return items.find(i => i.type === 'audio') || items.find(i => i.type === 'test') || null;
+  };
+  
+  // 큰 + 작은 혼합 케이스
+  if (largeItems.length > 0 && smallItems.length > 0) {
+    const minibarItem = pickMinibar(smallItems);
+    const cFromSmall = smallItems.filter(i => i !== minibarItem);
+    return { 
+      cItems: [...largeItems, ...cFromSmall], 
+      minibarItem 
+    };
+  }
+  
+  // 모두 큰 콘텐츠: 모두 C
+  if (largeItems.length > 0 && smallItems.length === 0) {
+    return { cItems: largeItems, minibarItem: null };
+  }
+  
+  // 모두 작은 콘텐츠: 1개라면 C에 풀, 2개 이상이면 1개는 C에 1개는 미니바
+  if (smallItems.length === 1) {
+    return { cItems: smallItems, minibarItem: null };
+  }
+  // 작은 2개 이상: 미니바 1개 (오디오 우선), 나머지는 C
+  const minibarItem = pickMinibar(smallItems);
+  const cFromSmall = smallItems.filter(i => i !== minibarItem);
+  return { cItems: cFromSmall, minibarItem };
+}
+
+const scenarios = [
+  {
+    id: 1,
+    name: "오픈북 시험",
+    desc: "시험(대표) + 동영상 부가",
+    composition: "[시험(대표), 동영상]",
+    flow: "그룹 진입 → 메인=시험, 좌측 사이드=동영상 → 시험 응시 + 동영상 자료 참고 → 시험 제출 또는 동영상 종료 → 그룹 종료",
+    slotReason: "부가 1개 → 좌측 사이드 패널 풀 영역. 동영상은 PIP가 아닌 좌측 큰 영역에 노출 (자료 참고 학습 효과).",
+    states: ["진행 중"],
+    layout: { mainType: 'test', mainLabel: '시험 (대표)', extras: [{ type: 'video', label: '동영상 부가' }] }
+  },
+  {
+    id: 2,
+    name: "강의 + 자료 + 시험 평가",
+    desc: "동영상 + 이미지 + 시험",
+    composition: "[동영상(대표), 이미지, 시험]",
+    flow: "그룹 진입 → 메인=동영상 강의, 좌측=이미지, 미니바=시험 대기 → 학습자 응시하기 클릭 → 시험이 메인으로, 동영상은 PIP로 → 시험 제출 → 그룹 종료",
+    slotReason: "부가 큰 1 + 작은 1 → 큰=좌측 사이드(이미지), 작은=메인 미니바(시험 대기). 응시형 1개라 미니바에 시험 대기 노출.",
+    states: ["진행 중", "응시 중"],
+    layout: { mainType: 'video', mainLabel: '동영상 강의 (대표)', extras: [{ type: 'confirm', icon: '🖼', label: '이미지' }, { type: 'test', label: '시험' }] }
+  },
+  {
+    id: 3,
+    name: "강의 + 자료 참고",
+    desc: "동영상 + PPT/PDF",
+    composition: "[동영상 강의(대표), PPT 이미지/PDF]",
+    flow: "그룹 진입 → 메인=강의 영상, 좌측=PPT 자료 → 자료 참고하며 강의 시청 → 강의 영상 종료 → 그룹 종료",
+    slotReason: "부가 1개 → 좌측 사이드 패널 풀 영역. 학습자 자료 집중 시 너비 핸들 드래그로 확장 가능.",
+    states: ["진행 중"],
+    layout: { mainType: 'video', mainLabel: '동영상 강의 (대표)', extras: [{ type: 'confirm', icon: '📊', label: 'PPT/PDF' }] }
+  },
+  {
+    id: 4,
+    name: "자료 참고 시험",
+    desc: "시험(대표) + 이미지 + 아티클",
+    composition: "[시험(대표), 이미지, 아티클]",
+    flow: "그룹 진입 → 메인=시험, 좌측=이미지·아티클 (균등 분할) → 시험 응시 + 자료 참고 → 시험 제출 → 그룹 종료",
+    slotReason: "부가 큰 콘텐츠 2개 → 모두 좌측 사이드 패널 균등 분할. 미니바 미사용. 재생형 없어 PIP 미사용.",
+    states: ["진행 중"],
+    layout: { mainType: 'test', mainLabel: '시험 (대표)', extras: [{ type: 'confirm', icon: '🖼', label: '이미지' }, { type: 'confirm', icon: '📄', label: '아티클' }] }
+  },
+  {
+    id: 5,
+    name: "어학 학습 + 시험",
+    desc: "텍스트 + 오디오 + 시험",
+    composition: "[아티클(대표), 오디오, 시험]",
+    flow: "그룹 진입 → 메인=아티클, 미니바=오디오, 좌측=시험 대기 → 학습자 응시하기 클릭 → 시험이 메인으로, 아티클은 좌측 사이드로 (오디오 미니바는 그대로 유지) → 시험 제출 → 그룹 종료",
+    slotReason: "부가 작은 콘텐츠 2개 (오디오 + 응시형) → 미니바 우선순위에 따라 오디오=미니바, 시험=좌측 사이드. 응시 중에도 오디오는 미니바 위치 유지 (어학 청해 학습 동선).",
+    states: ["진행 중", "응시 중"],
+    layout: { mainType: 'article', mainLabel: '아티클 (대표)', extras: [{ type: 'audio', label: '오디오' }, { type: 'test', label: '시험' }], mainContentDuringTest: { type: 'confirm', icon: '📄', label: '아티클' } }
+  },
+  {
+    id: 6,
+    name: "토론형 학습",
+    desc: "동영상 + 토론 + 이미지",
+    composition: "[동영상(대표), 토론, 이미지]",
+    flow: "그룹 진입 → 메인=동영상, 좌측=토론·이미지 (균등 분할) → 동영상 시청 + 토론 + 자료 참고 → 동영상 종료 → 그룹 종료",
+    slotReason: "부가 큰 콘텐츠 2개 → 모두 좌측 사이드 패널 균등 분할. 토론(소통형)은 좌측 사이드 최상단 우선 노출.",
+    states: ["진행 중"],
+    layout: { mainType: 'video', mainLabel: '동영상 (대표)', extras: [{ type: 'discussion', label: '토론' }, { type: 'confirm', icon: '🖼', label: '이미지' }] }
+  },
+  {
+    id: 7,
+    name: "토론 + 평가",
+    desc: "동영상 + 토론 + 시험",
+    composition: "[동영상(대표), 토론, 시험]",
+    flow: "그룹 진입 → 메인=동영상, 좌측=토론, 미니바=시험 대기 → 동영상 시청 + 토론 → 학습자 응시하기 클릭 → 시험이 메인으로, 동영상은 PIP로 → 시험 제출 → 그룹 종료",
+    slotReason: "부가 큰 1 + 작은 1 → 큰=좌측 사이드(토론, 소통형 우선), 작은=메인 미니바(시험 대기).",
+    states: ["진행 중", "응시 중"],
+    layout: { mainType: 'video', mainLabel: '동영상 (대표)', extras: [{ type: 'discussion', label: '토론' }, { type: 'test', label: '시험' }] }
+  },
+  {
+    id: 8,
+    name: "오디오 학습",
+    desc: "텍스트 + 오디오",
+    composition: "[아티클(대표), 오디오]",
+    flow: "그룹 진입 → 메인=아티클, 좌측=오디오 (풀 영역) → 아티클 학습 + 오디오 청취 → 학습 완료 → 그룹 종료",
+    slotReason: "부가 1개 (작은 콘텐츠) → 좌측 사이드 패널 풀 영역. 다른 작은 콘텐츠 없어 미니바 미사용.",
+    states: ["진행 중"],
+    layout: { mainType: 'article', mainLabel: '아티클 (대표)', extras: [{ type: 'audio', label: '오디오' }] }
+  },
+  {
+    id: 9,
+    name: "어학 학습 + 자료",
+    desc: "아티클 + 이미지 + 오디오",
+    composition: "[아티클(대표), 이미지, 오디오]",
+    flow: "그룹 진입 → 메인=아티클, 좌측=이미지, 미니바=오디오 → 아티클 학습 + 자료 참고 + 오디오 청취 → 학습 완료 → 그룹 종료",
+    slotReason: "부가 큰 1 + 작은 1 → 큰=좌측 사이드(이미지), 작은=메인 미니바(오디오, 미니바 우선).",
+    states: ["진행 중"],
+    layout: { mainType: 'article', mainLabel: '아티클 (대표)', extras: [{ type: 'confirm', icon: '🖼', label: '이미지' }, { type: 'audio', label: '오디오' }] }
+  }
+];
+
+let currentScenario = 1;
+let currentState = 1;
+let viewMode = 'desktop'; // 'desktop' or 'mobile'
+let cWidth = 200;
+
+function getBp() { return viewMode === 'mobile' ? 'sm' : 'md'; }
+
+function renderScenarioButtons() {
+  const container = document.getElementById('scenario-buttons');
+  container.innerHTML = scenarios.map(s => `
+    <button class="scenario-btn ${s.id === currentScenario ? 'active' : ''}" data-id="${s.id}">
+      <span class="name">${s.id}. ${s.name}${s.unsupported ? '<span class="unsupported-badge">미지원</span>' : ''}</span>
+      <span class="desc">${s.desc}</span>
+    </button>
+  `).join('');
+  container.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentScenario = parseInt(btn.dataset.id);
+      currentState = 1;
+      renderAll();
+    });
+  });
+}
+
+function renderStateButtons() {
+  const container = document.getElementById('state-buttons');
+  const scenario = scenarios.find(s => s.id === currentScenario);
+  container.innerHTML = scenario.states.map((label, idx) => `
+    <button class="state-btn ${idx === currentState - 1 ? 'active' : ''}" data-idx="${idx + 1}">
+      ${label}
+    </button>
+  `).join('');
+  container.querySelectorAll('.state-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentState = parseInt(btn.dataset.idx);
+      renderScreen();
+      renderStateButtons();
+    });
+  });
+}
+
+function renderViewport() {
+  const bp = getBp();
+  const indicator = document.getElementById('bp-indicator');
+  const explainer = document.getElementById('bp-explainer');
+  if (bp === 'md') {
+    indicator.innerHTML = '<span class="bp-badge bp-md">데스크탑·태블릿</span>';
+    explainer.innerHTML = '<strong>데스크탑·태블릿</strong> — 메인 / 좌측 사이드 패널 (큰 콘텐츠 우선) / 미니바 (큰+작은 혼합 시 작은 1개) / PIP / 학습목록';
+  } else {
+    indicator.innerHTML = '<span class="bp-badge bp-sm">모바일</span>';
+    explainer.innerHTML = '<strong>모바일</strong> — 메인 상단 / 좌측 사이드 메인 하단 / 미니바 / PIP / 학습목록 최하단';
+  }
+  // 모드 버튼 active 상태 업데이트
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    if (btn.dataset.mode === viewMode) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+}
+
+function renderScreen() {
+  const screen = document.getElementById('responsive-screen');
+  const scenario = scenarios.find(s => s.id === currentScenario);
+  
+  if (scenario.unsupported) {
+    screen.style.width = '900px';
+    screen.classList.remove('is-mobile');
+    screen.innerHTML = `
+      <div class="unsupported-overlay">
+        ⚠️ 1차 미지원<br/>
+        <span style="font-size: 11px; font-weight: 400; opacity: 0.8;">재생형 2개 이상 시간 동기 재생은<br/>향후 동시재생 정책 활성화 시 적용</span>
+      </div>
+    `;
+    return;
+  }
+  
+  const bp = getBp();
+  if (bp === 'sm') {
+    screen.style.width = '320px';
+    screen.classList.add('is-mobile');
+  } else {
+    screen.style.width = '1100px';
+    screen.classList.remove('is-mobile');
+  }
+  screen.innerHTML = bp === 'md' ? renderMd(scenario) : renderSm(scenario);
+  attachHandlers();
+}
+
+function attachHandlers() {
+  document.querySelectorAll('.minibar-test .btn-mini, .c-item-test .btn-mini').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentState = 2;
+      renderScreen();
+      renderStateButtons();
+    });
+  });
+  document.querySelectorAll('.btn-cancel, .btn-submit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentState = 1;
+      renderScreen();
+      renderStateButtons();
+    });
+  });
+}
+
+function renderMd(scenario) {
+  const layout = scenario.layout;
+  const extras = layout.extras || [];
+  const isVideo = layout.mainType === 'video';
+  const isTesting = currentState === 2;
+  
+  // 슬롯 결정 (슬롯 결정 정책)
+  const slotted = decideSlots(extras);
+  let cItems = slotted.cItems;
+  let minibarItem = slotted.minibarItem;
+  
+  // 응시 중 처리
+  if (isTesting) {
+    // 시험 카드/미니바는 메인 응시 영역으로 빠짐
+    cItems = cItems.filter(i => i.type !== 'test');
+    if (minibarItem?.type === 'test') minibarItem = null;
+    // 대표 콘텐츠 (확인형·소통형)는 응시 시 C로 이동
+    if (layout.mainContentDuringTest) {
+      cItems = [layout.mainContentDuringTest, ...cItems];
+    }
+  }
+  
+  let cHTML = '';
+  if (cItems.length > 0) {
+    cHTML = `<div class="c-fixed-content">
+      <div class="c-stack">${cItems.map(renderCItem).join('')}</div>
+      <div class="c-handle"></div>
+    </div>`;
+  }
+  
+  let mainAreaHTML = '';
+  let minibarHTML = '';
+  let pipHTML = '';
+  let audioOverlayHTML = '';
+  
+  if (isTesting) {
+    if (isVideo) {
+      pipHTML = `<div class="slot slot-d pip-overlay">동영상 PIP</div>`;
+    }
+    const hasAudioInTest = minibarItem?.type === 'audio';
+    if (hasAudioInTest) {
+      // 오디오는 응시 중에도 메인 위 동일 위치 유지
+      minibarHTML = renderMinibar(minibarItem);
+    }
+    mainAreaHTML = `
+      <div class="test-active-fullarea">
+        <div class="test-active-header">
+          <span>📝 시험 응시 중</span>
+          <span style="font-size: 11px; opacity: 0.9;">⏱ 5:00 남음</span>
+        </div>
+        <div class="test-active-body">
+          <div class="test-question">1. 미니바의 위치는?</div>
+          <div class="test-options">
+            <button class="test-option">① PC·모바일 모두 메인 영역 위 (가로 풀 폭)</button>
+            <button class="test-option">② PC는 메인 안 하단, 모바일은 메인 위</button>
+            <button class="test-option">③ 화면 우하단 PIP</button>
+            <button class="test-option">④ 좌측 사이드 패널에 통합</button>
+          </div>
+          <div class="test-controls">
+            <button class="btn-cancel">취소</button>
+            <button class="btn-submit">제출</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    mainAreaHTML = `<div class="slot slot-a" style="height: 100%;">${layout.mainLabel}</div>`;
+    if (minibarItem) {
+      minibarHTML = renderMinibar(minibarItem);
+    }
+  }
+  
+  return `<div class="frame-md" style="--c-w: ${cItems.length > 0 ? cWidth + 'px' : '0'};">
+    <div>${cHTML}</div>
+    <div class="pc-content-area ${minibarHTML ? 'has-minibar' : ''}">
+      ${minibarHTML ? `<div>${minibarHTML}</div>` : ''}
+      <div class="pc-main-wrap">
+        ${mainAreaHTML}
+        ${pipHTML}
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="right-list slot slot-list">학습목록</div>
+    </div>
+  </div>`;
+}
+
+function renderSm(scenario) {
+  const layout = scenario.layout;
+  const extras = layout.extras || [];
+  const isVideo = layout.mainType === 'video';
+  const isTesting = currentState === 2;
+  
+  const slotted = decideSlots(extras);
+  let cItems = slotted.cItems;
+  let minibarItem = slotted.minibarItem;
+  
+  if (isTesting) {
+    cItems = cItems.filter(i => i.type !== 'test');
+    if (minibarItem?.type === 'test') minibarItem = null;
+    if (layout.mainContentDuringTest) {
+      cItems = [layout.mainContentDuringTest, ...cItems];
+    }
+  }
+  
+  const cHTML = cItems.length > 0 ? `<div class="mobile-c-stack">
+    ${cItems.map(renderCItemMobile).join('')}
+  </div>` : '';
+  
+  let mainAreaHTML = '';
+  let minibarHTML = '';
+  let pipHTML = '';
+  let audioOverlayHTML = '';
+  
+  if (isTesting) {
+    if (isVideo) {
+      pipHTML = `<div class="slot slot-d mobile-pip-sm" style="font-size: 10px;">동영상</div>`;
+    }
+    if (minibarItem?.type === 'audio') {
+      // 오디오 미니바는 응시 중에도 동일 위치 (하단)
+      minibarHTML = renderMinibarMobile(minibarItem);
+    }
+    mainAreaHTML = `
+      <div class="mobile-test-active-full">
+        <div class="test-active-header">
+          <span>📝 시험 응시 중</span>
+          <span style="font-size: 9px; opacity: 0.9;">⏱ 5:00</span>
+        </div>
+        <div class="test-active-body">
+          <div class="test-question">1. 오디오 위치?</div>
+          <div class="test-options">
+            <button class="test-option">① 하단 유지</button>
+            <button class="test-option">② 위로 이동</button>
+            <button class="test-option">③ C로 이동</button>
+          </div>
+          <div class="test-controls">
+            <button class="btn-cancel">취소</button>
+            <button class="btn-submit">제출</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    mainAreaHTML = `<div class="slot slot-a">${layout.mainLabel}</div>`;
+    if (minibarItem) {
+      minibarHTML = renderMinibarMobile(minibarItem);
+    }
+  }
+  
+  return `<div class="frame-sm ${cItems.length > 0 && !isTesting ? 'has-c' : ''} ${minibarHTML ? 'has-minibar' : ''}">
+    ${minibarHTML}
+    ${isTesting ? `<div style="position: relative;">${mainAreaHTML}</div>` : mainAreaHTML}
+    ${!isTesting ? cHTML : ''}
+    <div class="slot slot-list">학습목록 (하단)</div>
+    ${pipHTML}
+  </div>`;
+}
+
+function renderCItem(item) {
+  if (item.type === 'discussion') {
+    return `<div class="c-item c-item-discussion"><div class="c-item-icon">💬</div><div>${item.label}</div></div>`;
+  }
+  if (item.type === 'confirm') {
+    return `<div class="c-item c-item-confirm"><div class="c-item-icon">${item.icon || '🖼'}</div><div>${item.label}</div></div>`;
+  }
+  if (item.type === 'video') {
+    return `<div class="c-item c-item-video"><div class="c-item-icon">🎥</div><div>${item.label}</div></div>`;
+  }
+  if (item.type === 'test') {
+    return `<div class="c-item c-item-test"><div class="c-item-icon">📝</div><div>${item.label}</div><button class="btn-mini">응시하기</button></div>`;
+  }
+  if (item.type === 'audio') {
+    return `<div class="c-item c-item-audio"><div class="c-item-icon">🎧</div><div>${item.label}</div><div class="audio-controls">▶ 0:00 / 5:30</div></div>`;
+  }
+}
+
+function renderCItemMobile(item) {
+  if (item.type === 'discussion') return `<div class="mobile-c-item c-item-discussion">💬 ${item.label}</div>`;
+  if (item.type === 'confirm') return `<div class="mobile-c-item c-item-confirm">${item.icon || '🖼'} ${item.label}</div>`;
+  if (item.type === 'video') return `<div class="mobile-c-item c-item-video">🎥 ${item.label}</div>`;
+  if (item.type === 'test') return `<div class="mobile-c-item c-item-test" style="display: flex; justify-content: space-between; align-items: center;"><span>📝 ${item.label}</span><button class="btn-mini" style="background: var(--text-warning); color: white; border: none; border-radius: 2px; padding: 2px 6px; font-size: 8px; font-weight: 600; cursor: pointer; font-family: inherit;">응시</button></div>`;
+  if (item.type === 'audio') return `<div class="mobile-c-item c-item-audio" style="display: flex; justify-content: space-between; align-items: center;"><span>🎧 ${item.label}</span><span>▶</span></div>`;
+}
+
+function renderMinibar(item) {
+  if (item.type === 'test') {
+    return `<div class="minibar minibar-test"><div class="left">📝 ${item.label}</div><div class="right"><button class="btn-mini">응시하기</button></div></div>`;
+  }
+  if (item.type === 'audio') {
+    return `<div class="minibar minibar-audio"><div class="left">🎧 ${item.label}</div><div class="right"><span class="audio-time">▶ 0:00 / 5:30</span></div></div>`;
+  }
+  return '';
+}
+
+function renderMinibarMobile(item) {
+  if (item.type === 'test') {
+    return `<div class="mobile-minibar minibar-test"><span>📝 ${item.label}</span><button class="btn-mini">응시</button></div>`;
+  }
+  if (item.type === 'audio') {
+    return `<div class="mobile-minibar minibar-audio"><span>🎧 ${item.label}</span><span>▶</span></div>`;
+  }
+  return '';
+}
+
+function renderDetail() {
+  const scenario = scenarios.find(s => s.id === currentScenario);
+  const unsupportedBadge = scenario.unsupported ? ' <span style="background: var(--bg-danger); color: var(--text-danger); font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 600;">1차 미지원</span>' : '';
+  document.getElementById('scenario-detail').innerHTML = `
+    <p class="title">${scenario.id}. ${scenario.name}${unsupportedBadge}</p>
+    <p class="info-block"><span class="info-label">그룹 구성</span><span class="info-content">${scenario.composition}</span></p>
+    <p class="info-block"><span class="info-label">학습 흐름</span><span class="info-content">${scenario.flow || '-'}</span></p>
+    <p class="info-block"><span class="info-label">슬롯 결정 근거</span><span class="info-content">${scenario.slotReason || '-'}</span></p>
+  `;
+}
+
+function renderAll() {
+  renderScenarioButtons();
+  renderStateButtons();
+  renderViewport();
+  renderScreen();
+  renderDetail();
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    viewMode = btn.dataset.mode;
+    renderViewport();
+    renderScreen();
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>
