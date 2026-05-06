@@ -186,6 +186,7 @@ header .subtitle { margin: 0; font-size: 13px; color: var(--text-tertiary); }
 .canvas-area {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: 24px;
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
@@ -1055,10 +1056,10 @@ function renderSm(scenario) {
     }
   }
   
-  return `<div class="frame-sm ${cItems.length > 0 && !isTesting ? 'has-c' : ''} ${minibarHTML ? 'has-minibar' : ''}">
-    ${minibarHTML}
+  return `<div class="frame-sm ${cItems.length > 0 ? 'has-c' : ''} ${minibarHTML ? 'has-minibar' : ''}">
+    ${minibarHTML || '<div></div>'}
     ${isTesting ? `<div style="position: relative;">${mainAreaHTML}</div>` : mainAreaHTML}
-    ${!isTesting ? cHTML : ''}
+    ${cHTML || '<div></div>'}
     <div class="slot slot-list">학습목록 (하단)</div>
     ${pipHTML}
   </div>`;
